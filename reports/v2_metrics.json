@@ -1,0 +1,18 @@
+{
+  "backtest": {
+    "n": 2660,
+    "accuracy": 0.5278195488721804,
+    "rps": 0.202322278140451
+  },
+  "test_2026_27": {
+    "n": 50,
+    "accuracy": 0.44,
+    "rps": 0.2042819483671407
+  },
+  "backtest_mean_by_season": {
+    "always_home": 0.4353,
+    "model_v2": 0.5283,
+    "bookmakers": 0.5441,
+    "model_v1": 0.5297
+  }
+}

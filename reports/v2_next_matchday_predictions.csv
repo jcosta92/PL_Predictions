@@ -1,0 +1,11 @@
+Date,HomeTeam,AwayTeam,pH,pD,pA,Pick,Confidence
+2026-10-10,Arsenal,Leeds,0.726,0.175,0.099,H,0.726
+2026-10-10,Aston Villa,Brentford,0.396,0.291,0.314,H,0.396
+2026-10-10,Chelsea,Bournemouth,0.394,0.282,0.324,H,0.394
+2026-10-10,Ipswich,Fulham,0.355,0.287,0.358,A,0.358
+2026-10-10,Man United,Tottenham,0.626,0.22,0.154,H,0.626
+2026-10-10,Sunderland,Brighton,0.275,0.283,0.442,A,0.442
+2026-10-11,Crystal Palace,Nott'm Forest,0.351,0.295,0.354,A,0.354
+2026-10-11,Hull,Everton,0.31,0.288,0.401,A,0.401
+2026-10-11,Liverpool,Man City,0.315,0.249,0.436,A,0.436
+2026-10-12,Coventry,Newcastle,0.288,0.304,0.407,A,0.407

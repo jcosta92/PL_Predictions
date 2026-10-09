@@ -1,0 +1,50 @@
+features,pool,model,accuracy,rps
+bookmakers,-,-,0.544,0.1981
+base+clubelo+pi+shots,PL+Championship,ensemble,0.5278,0.2023
+base+clubelo+pi+shots,PL+Championship,gbm,0.5278,0.2025
+base+clubelo+pi+shots,top-5 leagues,ensemble,0.5256,0.2026
+base+clubelo+pi+shots,top-5 leagues,gbm,0.5282,0.2026
+base+clubelo+pi+shots,PL only,ensemble,0.5293,0.2028
+base+clubelo+pi+shots,PL+Championship,logreg,0.5233,0.2028
+base+clubelo+pi+shots,top-5 + Championship,ensemble,0.5248,0.2028
+base+clubelo+pi+shots,top-5 + Championship,logreg,0.5241,0.2029
+base+clubelo+pi+shots,top-5 leagues,logreg,0.5263,0.203
+base+clubelo+pi+shots,top-5 + Championship,gbm,0.5263,0.2032
+base+clubelo+pi+shots,PL only,logreg,0.5259,0.2032
+base+clubelo+pi+shots,PL only,gbm,0.5244,0.2036
+base+clubelo+pi,PL+Championship,ensemble,0.5278,0.2037
+base+clubelo+pi,top-5 + Championship,logreg,0.5282,0.2038
+base+clubelo+pi,PL+Championship,logreg,0.5256,0.2038
+base+clubelo,PL+Championship,logreg,0.5256,0.2038
+base,top-5 + Championship,logreg,0.5286,0.2039
+base+clubelo,PL+Championship,ensemble,0.5248,0.2039
+base,PL+Championship,logreg,0.5244,0.2039
+base+clubelo,top-5 + Championship,logreg,0.5289,0.2039
+base+clubelo+pi,top-5 leagues,logreg,0.5271,0.204
+base,PL+Championship,ensemble,0.5233,0.204
+base,top-5 leagues,ensemble,0.5244,0.204
+base,top-5 + Championship,ensemble,0.5259,0.204
+base,top-5 leagues,logreg,0.5244,0.204
+base+clubelo+pi,top-5 leagues,ensemble,0.5271,0.2041
+base+clubelo+pi,PL+Championship,gbm,0.5271,0.2041
+base+clubelo+pi,top-5 + Championship,ensemble,0.5271,0.2041
+base+clubelo,top-5 leagues,logreg,0.5263,0.2042
+base,PL only,logreg,0.5256,0.2042
+base+clubelo+pi,PL only,logreg,0.5263,0.2042
+base+clubelo,PL only,logreg,0.5274,0.2042
+base+clubelo,top-5 leagues,ensemble,0.5252,0.2043
+base+clubelo,top-5 + Championship,ensemble,0.5244,0.2043
+base,top-5 leagues,gbm,0.5211,0.2044
+base+clubelo+pi,PL only,ensemble,0.5274,0.2045
+base+clubelo+pi,top-5 leagues,gbm,0.5248,0.2045
+base,top-5 + Championship,gbm,0.5241,0.2045
+base+clubelo,PL+Championship,gbm,0.5263,0.2046
+base,PL+Championship,gbm,0.5222,0.2047
+base,PL only,ensemble,0.5256,0.2047
+base+clubelo,top-5 leagues,gbm,0.5233,0.2048
+base+clubelo+pi,top-5 + Championship,gbm,0.5233,0.2048
+base+clubelo,top-5 + Championship,gbm,0.5222,0.205
+base+clubelo,PL only,ensemble,0.5259,0.205
+base+clubelo+pi,PL only,gbm,0.5244,0.2064
+base,PL only,gbm,0.5252,0.2068
+base+clubelo,PL only,gbm,0.5214,0.2075

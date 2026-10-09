@@ -9,7 +9,7 @@ This is a rebuild of my 2023 bootcamp project [Mid_project_PL](https://github.co
 | | Accuracy | Notes |
 |---|---|---|
 | Always pick the home team | 43.5% | 2019/20–2025/26 backtest, 2,660 matches |
-| **This model** | **52.9%** | same backtest, each season predicted using only earlier seasons |
+| **This model** | **53.0%** | same backtest, each season predicted using only earlier seasons |
 | Bookmakers' favourite | 54.4% | same backtest |
 | **This model, 2026/27 so far** | **48% (24/50)** | unseen test season; only 36% of these matches were home wins |
 | Bookmakers, 2026/27 so far | 55% | odds only available for the first 20 matches |
@@ -47,6 +47,46 @@ The model gets within about 1.5 points of the bookmakers using only past results
 
 The final model is a regularised multinomial logistic regression. Gradient boosting and shot-based features were tried and were no better.
 
+## Version 2 experiments: can more data or better models beat 53%?
+
+`src/experiments.py` tests 48 combinations on the same seven-season backtest (2,660 matches). Every season is predicted using only earlier seasons.
+
+**More data**
+- **ClubElo ratings.** These are calibrated across leagues through cup and European matches, so newly promoted teams arrive with a proper rating.
+- **Extra training matches** from the Championship and the other top-5 leagues: up to 59,800 matches, against 9,800 for the Premier League alone.
+
+**Stronger ratings**
+- **Pi-ratings** (Constantinou & Fenton, 2013): separate home and away strength for each team.
+- **A shots-on-target pi-rating**, as a rough stand-in for expected goals.
+- **Exponentially weighted form.**
+
+**Models**
+- Logistic regression, gradient boosting, and an average of the two.
+- A rule for predicting draws.
+
+| | Accuracy | RPS (lower is better) |
+|---|---|---|
+| v1 (this repo's main model) | 53.0% | |
+| Best v2 (PL + Championship, all v2 features, LR + GBM average) | 52.8% | 0.2023 |
+| Range across all 48 v2 configurations | 52.1% – 52.9% | 0.2023 – 0.2075 |
+| Bookmakers | 54.4% | 0.1981 |
+| v2 on 2026/27 so far (50 matches) | 44% | 0.2043 |
+
+**Conclusion.** None of it moved accuracy. The extra data and ratings made the probabilities slightly sharper on the backtest (better RPS), but every accuracy difference is within noise. For 2,660 matches, one standard error is about 1 point. The draw rule changed accuracy by 0.03 points. A model built on results, shots and ratings tops out around 53%.
+
+The remaining gap to the bookmakers is information this data doesn't contain: team news, injuries, rotation and lineups.
+
+**Where the model is useful:** accuracy depends heavily on how confident the model is (`reports/v2_accuracy_by_confidence.csv`):
+
+| Model confidence | Share of matches | Accuracy |
+|---|---|---|
+| under 45% | 32% | 39% |
+| 45–55% | 27% | 49% |
+| 55–65% | 20% | 60% |
+| 65% or more | 21% | **73%** |
+
+Run: `python build_multileague.py && python experiments.py && python evaluate_v2.py`
+
 ## Run
 
 ```bash
@@ -62,5 +102,6 @@ python predict_next.py  # writes reports/next_matchday_predictions.csv
 
 - [Club Football Match Data](https://github.com/xgabora/Club-Football-Match-Data-2000-2025) (MIT), sourced from [Football-Data.co.uk](https://www.football-data.co.uk/)
 - [openfootball/england](https://github.com/openfootball/england) (CC0)
+- [ClubElo](http://clubelo.com/) ratings, included in the Club Football Match Data set
 
 For match analysis and learning purposes. Not betting advice.
