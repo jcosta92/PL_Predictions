@@ -1,0 +1,9 @@
+signal,matches,accuracy,base_accuracy,acc_change_pts,acc_se_pts,rps,rps_change,rps_se,rps_change_in_se
+"1. Fixture congestion (all competitions, Europe)",2660,0.53083,0.53008,0.07519,0.27631,0.20277,0.00054,0.00032,1.66902
+"2. What's at stake (table, motivation)",2660,0.53045,0.53008,0.03759,0.216,0.2027,0.00047,0.00028,1.68396
+3. Manager change,2660,0.53421,0.53008,0.41353,0.28377,0.20218,-5e-05,0.00029,-0.17619
+5. Player ratings (plus-minus),2660,0.53045,0.53008,0.03759,0.26321,0.2023,7e-05,0.00025,0.28667
+6. Unavailable players (suspended / not in squad / benched),2660,0.52857,0.53008,-0.15038,0.3363,0.20282,0.00059,0.00038,1.56796
+All five combined,2660,0.52932,0.53008,-0.07519,0.46051,0.20375,0.00152,0.00072,2.09365
+"4a. Expected goals (xG), six features, 2020/21-2024/25",1795,0.53649,0.54095,-0.44568,0.67326,0.20376,0.00076,0.00112,0.67803
+4b. xG: single 19-match xG difference (second attempt),1795,0.54318,0.54095,0.22284,0.50459,0.20116,-0.00184,0.00073,-2.52049

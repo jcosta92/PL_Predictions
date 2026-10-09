@@ -20,7 +20,7 @@ This notebook walks through how the model is built, step by step, with the reaso
 4. Build features using only information available before kickoff
 5. Train a model and test it on a season it has never seen
 6. Repeat that test over 7 seasons to get a reliable number
-7. Test your ideas: head-to-head history, weather and team news (lineups)
+7. Test your ideas: head-to-head, weather, team news (lineups) and seven more signals
 8. What else was tried
 9. When to trust the model: accuracy by confidence
 10. This season and this weekend
@@ -382,6 +382,44 @@ md("""
 """)
 
 md("""
+### 7d. Seven more signals
+
+Every idea from the brainstorm was tested against the lineup model, the best model so far. All of them use only information available before kickoff (`src/more_signals.py`, `src/odds_movement.py`; the test is `src/test_more_signals.py`):
+
+| # | Signal | How it's measured |
+|---|---|---|
+| 1 | Fixture congestion | Rest days and games in the last 14 days across *all* competitions; a European game in the 4 days before or after |
+| 2 | What's at stake | League table on the day: points gap to 4th place and to safety; "nothing to play for" and "relegation fight" flags for the last 10 rounds |
+| 3 | Manager change | League games since the current manager took over |
+| 4 | Expected goals (xG) | Rolling Understat xG for and against (2019/20 to April 2025 only) |
+| 5 | Player ratings | Each player's on-pitch goal difference per 90 minutes (plus-minus), averaged over the starting XI |
+| 6 | Unavailable players | Regulars suspended (red cards, yellow-card bans), missing from the whole matchday squad, or only on the bench |
+| 7 | Odds movement | How the bookmakers' odds moved between a few days before and kickoff (2019/20 onwards) |
+
+**How to read the table:**
+- `rps_change` below 0 means better probabilities; above 0 means worse.
+- `rps_change_in_se` is that change measured in standard errors.
+- With this many tests, one can look good by luck, so only a clear improvement beyond −2 counts.
+""")
+
+code("""
+mt = pd.read_csv(ROOT / "reports/more_signals_test.csv")
+cols = ["signal", "matches", "accuracy", "acc_change_pts", "rps", "rps_change", "rps_change_in_se"]
+mt[[c for c in cols if c in mt.columns]].assign(accuracy=lambda d: (d.accuracy * 100).round(1)).round(4)
+""")
+
+md("""
+**What the results say**
+- **Congestion, stakes and unavailable players** made the probabilities slightly *worse*. The model already sees most of this: the lineup features show who is rested or missing, and Elo and form show how strong the team is. The extra columns mostly add noise.
+- **Manager change and player ratings** made no difference. Plus-minus ratings mostly measure the team a player is in, which Elo already knows.
+- **All five combined** is clearly worse, by about 2 standard errors. That's overfitting: more columns, same information.
+- **xG:** six xG features didn't help. A single season-long xG difference *did* (about 2.5 standard errors). That fits published research: xG measures team strength better than goals do. But it was a second attempt, so treat it as promising rather than proven. It needs a longer xG history to confirm.
+- **Odds movement** captures late news and informed money. If its rows are in the table above, compare them with the bookmakers' closing odds. If they aren't, the Football-Data files haven't been added yet.
+
+The pattern is the same as everything before: **the remaining edge is information, not more columns.** Lineups helped because they are new information. Most of the other signals are already reflected in Elo, form and the lineups.
+""")
+
+md("""
 ## 8. Everything else that was tried
 
 `src/experiments.py` tested 48 combinations on the same 7-season backtest:
@@ -463,8 +501,9 @@ md("""
 2. **Each team's recent results are the core of the model**, through Elo and form.
 3. **Head-to-head history and weather were tested properly and don't help.** Elo already covers head-to-head, and weather affects goals, not winners.
 4. **More data and more complex models didn't help either.** The limit is the information, not the algorithm.
-5. **Team news is the only input that measurably helped.** Confirmed lineups (who is missing compared with usual) made the probabilities clearly better, though accuracy barely moved. Using them live needs the lineups collected about an hour before kickoff, for example with an Apify scraper. The bookmakers are still slightly ahead because they know the same news earlier, and more of it.
-6. **Report confidence, not just a pick.** At 65%+ confidence the model is right about 3 times in 4.
+5. **Of everything tested, only team news (lineups) clearly helped, with xG as a promising second.** Congestion, stakes, manager changes, player ratings and suspensions added nothing beyond what the model already knew.
+6. **Team news, in more detail:** Confirmed lineups (who is missing compared with usual) made the probabilities clearly better, though accuracy barely moved. Using them live needs the lineups collected about an hour before kickoff, for example with an Apify scraper. The bookmakers are still slightly ahead because they know the same news earlier, and more of it.
+7. **Report confidence, not just a pick.** At 65%+ confidence the model is right about 3 times in 4.
 """)
 
 nb["cells"] = C

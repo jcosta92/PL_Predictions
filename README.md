@@ -123,6 +123,44 @@ Using this live needs the confirmed XI collected before each kickoff, for exampl
 
 The raw Transfermarkt files are too large for GitHub (`game_lineups` is 126 MB). Download them from [transfermarkt-datasets](https://github.com/dcaribou/transfermarkt-datasets) (CC0) into `data/raw/transfermarkt/`. The processed `data/processed/lineup_features.csv` is included.
 
+## Seven more signals
+
+`src/more_signals.py` builds seven further candidate signals and `src/test_more_signals.py` tests each one against the lineup model above. Every signal uses only information available before kickoff.
+
+1. **Fixture congestion:** rest days counting all competitions, games in the last 14 days, and European matches just before or after.
+2. **What's at stake:** points gap to the top 4 and to safety, "nothing to play for", and relegation fights.
+3. **Manager change:** new manager, and games since the manager arrived.
+4. **Expected goals (xG):** rolling xG, xGA and non-penalty xG over 6 and 19 matches, from Understat. The data runs from 2019/20 to early April 2025 only.
+5. **Player ratings:** plus-minus ratings for each player, shrunk towards zero, summed over today's XI.
+6. **Unavailable players:** regulars suspended (derived from the card rules), regulars not in the squad, and regulars benched.
+7. **Odds movement:** change between the opening and closing market prices.
+
+Signals 1, 2, 3, 5 and 6 cover the full 2019/20–2025/26 backtest (2,660 matches). xG and odds movement only exist from 2019/20. For those, a second-stage model is fitted on earlier seasons of that era, and it is compared with the lineup model's own probabilities on the same matches.
+
+The table compares each signal with the lineup model on the same matches. A negative RPS change is better. "SE" is the change divided by its standard error.
+
+| Signal | Matches | Accuracy | RPS | RPS change | SE |
+|---|---|---|---|---|---|
+| Lineup model (base) | 2,660 | 53.0% | 0.2022 | | |
+| 1. Fixture congestion | 2,660 | 53.1% | 0.2028 | +0.0005 | +1.7 |
+| 2. What's at stake | 2,660 | 53.0% | 0.2027 | +0.0005 | +1.7 |
+| 3. Manager change | 2,660 | 53.4% | 0.2022 | −0.0001 | −0.2 |
+| 5. Player ratings | 2,660 | 53.0% | 0.2023 | +0.0001 | +0.3 |
+| 6. Unavailable players | 2,660 | 52.9% | 0.2028 | +0.0006 | +1.6 |
+| All five combined | 2,660 | 52.9% | 0.2037 | +0.0015 | +2.1 |
+| 4a. xG, six features (2020/21 to Apr 2025) | 1,795 | 53.6% (base 54.1%) | 0.2038 | +0.0008 | +0.7 |
+| 4b. xG, single 19-match xG difference | 1,795 | 54.3% (base 54.1%) | 0.2012 | −0.0018 | −2.5 |
+| Bookmakers, same 1,795 matches | 1,795 | 55.5% | 0.1973 | | |
+| 7. Odds movement | | | | | not run |
+
+**Conclusions**
+
+- **Signals 1, 2, 3, 5 and 6 add nothing.** Each one is within noise, and most make the probabilities slightly worse. Combining all five makes them clearly worse (+2.1 SE), which is overfitting. The manager-change accuracy gain (+0.4 points, se 0.28) is not significant.
+- **Most of these are already priced in.** Elo and form already capture the effect of a new manager or a run of fixtures. The lineup already shows which players are missing, so the reason they are missing adds nothing.
+- **xG is the only candidate.** A single 19-match xG difference improves RPS by 2.5 standard errors and closes about a third of the gap to the bookmakers. It was the *second* xG specification tried, after the six-feature version failed, and 8 signals were tested. So it is promising but not proven. It needs a season the model has not seen yet. Understat data for 2025/26 onwards is required to check it.
+- **The suspension feature is approximate.** Card counts give the right ban in most cases, but 14% of the players flagged as suspended still made the squad (appeals and rescinded cards).
+- **Odds movement needs the full Football-Data season files** (`E0.csv` per season, with the `AvgH`/`AvgCH` columns). The site is not reachable from the environment this was built in. Save them as `data/raw/football_data_full/E0_1920.csv` … `E0_2526.csv` and rerun `python test_more_signals.py`; the test, and the bookmakers' opening and closing reference rows, run automatically. Movement is a market signal: it can only be used close to kickoff, and it measures how much late information the bookmakers had rather than adding football knowledge.
+
 ## Run
 
 ```bash
@@ -134,6 +172,7 @@ python leakage_demo.py
 python predict_next.py  # writes reports/next_matchday_predictions.csv
 python test_extra_signals.py
 python lineups.py && python test_lineups.py   # needs the Transfermarkt files
+python more_signals.py && python test_more_signals.py   # needs the Transfermarkt files
 ```
 
 The notebook (`notebooks/`) needs `jupyter` and `matplotlib` as well.
@@ -143,6 +182,7 @@ The notebook (`notebooks/`) needs `jupyter` and `matplotlib` as well.
 - [Club Football Match Data](https://github.com/xgabora/Club-Football-Match-Data-2000-2025) (MIT), sourced from [Football-Data.co.uk](https://www.football-data.co.uk/)
 - [openfootball/england](https://github.com/openfootball/england) (CC0)
 - [ClubElo](http://clubelo.com/) ratings, included in the Club Football Match Data set
-- [transfermarkt-datasets](https://github.com/dcaribou/transfermarkt-datasets) (CC0): lineups and player market values
+- [transfermarkt-datasets](https://github.com/dcaribou/transfermarkt-datasets) (CC0): lineups, player market values, appearances, cards and managers
+- [Understat](https://understat.com/) team xG, 2019/20 to April 2025, via the [vaastav/Fantasy-Premier-League](https://github.com/vaastav/Fantasy-Premier-League) repository
 
 For match analysis and learning purposes. Not betting advice.
