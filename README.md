@@ -97,6 +97,32 @@ Run: `python build_multileague.py && python experiments.py && python evaluate_v2
 - **Head-to-head:** the last 6 meetings between the two clubs within 6 years (goal difference, points, result at the same ground, draw rate). Added to the v1 model on the 7-season backtest, it changed accuracy by **0.0 points** (standard error 0.2), and the probabilities got slightly worse. Elo and form already capture "this team usually beats that one", and six meetings across different squads are mostly noise.
 - **Weather:** daily weather in the home team's city, Aug 2017 to Apr 2023, collected for the 2023 project. Rain raises the draw rate by about 1 point and wind lowers goals slightly. Neither changes who wins, because weather affects both teams. Used as an adjustment to the v1 probabilities, it changed accuracy by **−0.3 points** and made the probabilities clearly worse, about 4 standard errors, because the model was fitting noise.
 
+## Team news: confirmed lineups
+
+`src/lineups.py` turns Transfermarkt starting lineups and player market values into team-news features for every match from 2013/14 to 2025/26. Each player is valued only at valuations dated before the match.
+- **XI value:** total value of today's starting XI.
+- **XI vs usual:** today's XI value compared with the team's last 10 matches.
+- **Regulars out:** how many usual starters are missing.
+- **Squad value:** known days in advance.
+
+Lineups are announced about an hour before kickoff.
+
+`src/test_lineups.py` trains every variant on the same matches and scores them on the 2019/20–2025/26 backtest (2,660 matches):
+
+| | Accuracy | RPS | RPS change vs v1 features |
+|---|---|---|---|
+| v1 features (trained 2013/14+) | 52.8% | 0.2039 | |
+| + squad value (no lineup) | 52.8% | 0.2042 | +0.0002 (se 0.0004) |
+| **+ squad value + confirmed lineup** | **53.0%** | **0.2022** | **−0.0017 (se 0.0007)** |
+| same, gradient boosting | 52.6% | 0.2085 | +0.0046 |
+| Bookmakers | 54.4% | 0.1981 | |
+
+**Conclusion.** Lineups are the only input in this project that measurably improves the predictions. Probability quality improves by about 2.4 standard errors. Accuracy barely moves, because team news mostly changes *how likely* the favourite is to win rather than *which team* is the favourite. The bookmakers keep an edge because they get injury news earlier.
+
+Using this live needs the confirmed XI collected before each kickoff, for example with an Apify scraper. The historical dataset ends in May 2026.
+
+The raw Transfermarkt files are too large for GitHub (`game_lineups` is 126 MB). Download them from [transfermarkt-datasets](https://github.com/dcaribou/transfermarkt-datasets) (CC0) into `data/raw/transfermarkt/`. The processed `data/processed/lineup_features.csv` is included.
+
 ## Run
 
 ```bash
@@ -107,6 +133,7 @@ python evaluate.py      # writes reports/metrics.json, backtest and test predict
 python leakage_demo.py
 python predict_next.py  # writes reports/next_matchday_predictions.csv
 python test_extra_signals.py
+python lineups.py && python test_lineups.py   # needs the Transfermarkt files
 ```
 
 The notebook (`notebooks/`) needs `jupyter` and `matplotlib` as well.
@@ -116,5 +143,6 @@ The notebook (`notebooks/`) needs `jupyter` and `matplotlib` as well.
 - [Club Football Match Data](https://github.com/xgabora/Club-Football-Match-Data-2000-2025) (MIT), sourced from [Football-Data.co.uk](https://www.football-data.co.uk/)
 - [openfootball/england](https://github.com/openfootball/england) (CC0)
 - [ClubElo](http://clubelo.com/) ratings, included in the Club Football Match Data set
+- [transfermarkt-datasets](https://github.com/dcaribou/transfermarkt-datasets) (CC0): lineups and player market values
 
 For match analysis and learning purposes. Not betting advice.

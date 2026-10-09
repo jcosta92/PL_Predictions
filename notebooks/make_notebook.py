@@ -20,7 +20,7 @@ This notebook walks through how the model is built, step by step, with the reaso
 4. Build features using only information available before kickoff
 5. Train a model and test it on a season it has never seen
 6. Repeat that test over 7 seasons to get a reliable number
-7. Test your ideas: head-to-head history and weather
+7. Test your ideas: head-to-head history, weather and team news (lineups)
 8. What else was tried
 9. When to trust the model: accuracy by confidence
 10. This season and this weekend
@@ -338,6 +338,50 @@ Weather would matter more if you were predicting *the number of goals* rather th
 """)
 
 md("""
+### 7c. Team news: confirmed starting lineups
+
+Injuries, suspensions and rotation all show up the same way: a player who normally starts isn't in today's XI. Lineups are announced about an hour before kickoff, so they're legitimate pre-match information.
+
+The data is the Transfermarkt dataset (`data/raw/transfermarkt/`): the starting XI for every Premier League match from 2013/14 to 2025/26, plus each player's market value over time. `src/lineups.py` builds four features per team, using only information from before the match:
+
+| Feature | Meaning |
+|---|---|
+| **XI value** | Total market value of today's starting XI. Each player is valued at his latest Transfermarkt valuation *before* the match. |
+| **XI vs usual** | Today's XI value compared with the team's average over its previous 10 league matches. Negative means a weakened team. |
+| **Regulars out** | How many of the team's 11 most frequent recent starters aren't starting today. |
+| **Squad value** | Value of the 11 most valuable players used in the previous 20 matches. Known days in advance, with no lineup needed. |
+
+An example: the matches where a team fielded its most weakened XI compared with usual.
+""")
+
+code("""
+lu = pd.read_csv(ROOT / "data/processed/lineup_features.csv", parse_dates=["Date"])
+lu = lu.merge(matches[["Date", "HomeTeam", "AwayTeam", "Result", "FTHG", "FTAG"]], on=["Date", "HomeTeam", "AwayTeam"])
+weakest = lu.assign(home_xi_vs_usual_pct=lambda d: (np.exp(d.H_xi_vs_usual) - 1) * 100).nsmallest(5, "home_xi_vs_usual_pct")
+weakest[["Date", "HomeTeam", "AwayTeam", "FTHG", "FTAG", "home_xi_vs_usual_pct", "H_regulars_out"]].round(1)
+""")
+
+md("""
+**The test** (`src/test_lineups.py`): lineups only exist from 2013/14, so every variant is trained on the same matches (2013/14 onwards, earlier seasons only) and scored on the same 2,660 matches from 2019/20 to 2025/26.
+""")
+
+code("""
+lsum = pd.read_csv(ROOT / "reports/lineup_summary.csv")
+lsum.assign(accuracy=lambda d: (d.accuracy * 100).round(1))
+""")
+
+md("""
+**Result: this is the first new input that measurably helps, but only a little.**
+- **Probability quality improves clearly.** RPS drops by about 0.0017, which is roughly 2.4 standard errors, so it's not noise. The model now knows when a team is weakened.
+- **Accuracy rises about 0.2 points**, which is within noise. Lineup news usually changes *how likely* the favourite is to win, not *which team* is the favourite.
+- **Squad value on its own adds nothing.** Elo already knows how strong a club is. The gain comes from the lineup itself: who is actually playing today.
+- **Gradient boosting overfits** these features. Logistic regression stays the better model.
+- **The bookmakers are still ahead** (RPS 0.198 against 0.202). They also know the lineups, and they see injury news days earlier, plus fitness, tactics and betting flows.
+
+**Using it live** would mean collecting the confirmed lineups about an hour before each kickoff, for example with an Apify scraper. The historical dataset stops in May 2026, so it can't produce lineup features for the current season.
+""")
+
+md("""
 ## 8. Everything else that was tried
 
 `src/experiments.py` tested 48 combinations on the same 7-season backtest:
@@ -419,7 +463,7 @@ md("""
 2. **Each team's recent results are the core of the model**, through Elo and form.
 3. **Head-to-head history and weather were tested properly and don't help.** Elo already covers head-to-head, and weather affects goals, not winners.
 4. **More data and more complex models didn't help either.** The limit is the information, not the algorithm.
-5. **The remaining gap to the bookmakers is team news**: injuries, suspensions, rotation and confirmed lineups. That's the next data source to add, for example by scraping lineups and injury news with Apify a few hours before kickoff.
+5. **Team news is the only input that measurably helped.** Confirmed lineups (who is missing compared with usual) made the probabilities clearly better, though accuracy barely moved. Using them live needs the lineups collected about an hour before kickoff, for example with an Apify scraper. The bookmakers are still slightly ahead because they know the same news earlier, and more of it.
 6. **Report confidence, not just a pick.** At 65%+ confidence the model is right about 3 times in 4.
 """)
 

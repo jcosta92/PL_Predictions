@@ -1,0 +1,7 @@
+model,accuracy,rps,acc_vs_A_pts,acc_vs_A_se,rps_vs_A,rps_vs_A_se
+A: v1 features,0.5278,0.2039,0.0,0.0,0.0,0.0
+B: + squad value (no lineup),0.5278,0.2042,0.0,0.3235,0.0002,0.0004
+C: + squad value + confirmed lineup,0.5301,0.2022,0.2256,0.4574,-0.0017,0.0007
+D: C with gradient boosting,0.5263,0.2085,-0.1504,0.6747,0.0046,0.0014
+ref: current v1 (trained from 2001),0.5271,0.2041,-0.0752,0.3191,0.0002,0.0003
+bookmakers,0.544,0.1981,,,,

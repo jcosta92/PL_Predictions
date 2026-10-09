@@ -1,0 +1,13 @@
+{
+  "agreement_with_bookmakers": {
+    "A": 0.8913533834586466,
+    "C": 0.893984962406015
+  },
+  "weakened_lineup_matches": {
+    "matches": 540,
+    "share": 0.20300751879699247,
+    "A_acc": 0.5333333333333333,
+    "C_acc": 0.5351851851851852,
+    "bookmakers_acc": 0.5555555555555556
+  }
+}
