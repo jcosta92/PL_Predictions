@@ -1,0 +1,14 @@
+{
+  "head_to_head": {
+    "acc_change_pts": 0.0,
+    "acc_change_se_pts": 0.2059494518462348,
+    "rps_change": 0.0004303159411950664,
+    "rps_change_se": 0.0002045631936501842
+  },
+  "weather": {
+    "acc_change_pts": -0.2795248078266946,
+    "acc_change_se_pts": 0.43086385281473333,
+    "rps_change": 0.002272671851331549,
+    "rps_change_se": 0.0006387215289209297
+  }
+}

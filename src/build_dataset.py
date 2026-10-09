@@ -81,8 +81,17 @@ def parse_openfootball(path: Path, season_start_year: int, played: bool = True) 
     return pd.DataFrame(rows)
 
 
+# Football-Data spells some clubs differently across seasons. One name per club,
+# otherwise the club looks like a brand-new team and its ratings reset.
+CANONICAL = {"Nottm Forest": "Nott'm Forest"}
+
+
 def season_of(date: pd.Timestamp) -> str:
-    start = date.year if date.month >= 7 else date.year - 1
+    """Season label. Seasons start in mid-July, except 2020: the COVID-delayed
+    2019/20 season finished in late July/early August 2020."""
+    cutoff = pd.Timestamp(year=date.year, month=8, day=15) if date.year == 2020 \
+        else pd.Timestamp(year=date.year, month=7, day=15)
+    start = date.year if date >= cutoff else date.year - 1
     return f"{start}/{str(start + 1)[-2:]}"
 
 
@@ -94,6 +103,7 @@ def load_football_data() -> pd.DataFrame:
         "OddHome": "OddH", "OddDraw": "OddD", "OddAway": "OddA",
     })
     fd["Date"] = pd.to_datetime(fd["Date"])
+    fd[["HomeTeam", "AwayTeam"]] = fd[["HomeTeam", "AwayTeam"]].replace(CANONICAL)
     keep = ["Date", "HomeTeam", "AwayTeam", "FTHG", "FTAG", "HS", "AS", "HST", "AST",
             "OddH", "OddD", "OddA"]
     return fd[keep]

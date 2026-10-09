@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from build_dataset import RAW, parse_openfootball, season_of
+from build_dataset import CANONICAL, RAW, parse_openfootball, season_of
 
 ROOT = Path(__file__).resolve().parents[1]
 LEAGUES = ["E0", "E1", "SP1", "I1", "D1", "F1"]  # PL, Championship, LaLiga, Serie A, Bundesliga, Ligue 1
@@ -33,6 +33,7 @@ def load(source_csv: Path) -> pd.DataFrame:
         "OddHome": "OddH", "OddDraw": "OddD", "OddAway": "OddA",
         "HomeElo": "HomeClubElo", "AwayElo": "AwayClubElo", "Division": "League"})
     m["Date"] = pd.to_datetime(m["Date"])
+    m[["HomeTeam", "AwayTeam"]] = m[["HomeTeam", "AwayTeam"]].replace(CANONICAL)
     keep = ["League", "Date", "HomeTeam", "AwayTeam", "FTHG", "FTAG", "HS", "AS", "HST", "AST",
             "HomeCorners", "AwayCorners", "OddH", "OddD", "OddA", "HomeClubElo", "AwayClubElo"]
     return m[keep]

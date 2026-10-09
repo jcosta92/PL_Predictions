@@ -1,0 +1,8 @@
+conditions,matches,home win %,draw %,goals per match
+all weather-era matches,2191,44.23,22.77,2.75
+dry (<2 mm rain),1575,44.51,22.41,2.76
+rainy (>=2 mm),616,43.51,23.7,2.72
+calm (<30 km/h wind),1750,44.23,23.26,2.77
+windy (>=30 km/h),441,44.22,20.86,2.65
+cold (<8 C),909,45.65,22.99,2.67
+warm (>=15 C),365,42.74,24.38,2.78
