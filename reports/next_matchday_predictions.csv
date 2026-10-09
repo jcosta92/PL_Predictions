@@ -1,0 +1,11 @@
+Date,HomeTeam,AwayTeam,HomeElo,AwayElo,pH,pD,pA,Pick
+2026-10-10,Arsenal,Leeds,1745.0,1547.0,0.691,0.2,0.11,H
+2026-10-10,Aston Villa,Brentford,1571.0,1585.0,0.425,0.279,0.296,H
+2026-10-10,Chelsea,Bournemouth,1552.0,1582.0,0.383,0.276,0.341,H
+2026-10-10,Ipswich,Fulham,1441.0,1514.0,0.3,0.298,0.401,A
+2026-10-10,Man United,Tottenham,1614.0,1448.0,0.615,0.239,0.146,H
+2026-10-10,Sunderland,Brighton,1502.0,1611.0,0.27,0.293,0.437,A
+2026-10-11,Crystal Palace,Nott'm Forest,1498.0,1528.0,0.399,0.287,0.314,H
+2026-10-11,Hull,Everton,1471.0,1547.0,0.29,0.293,0.417,A
+2026-10-11,Liverpool,Man City,1640.0,1755.0,0.324,0.252,0.424,A
+2026-10-12,Coventry,Newcastle,1424.0,1556.0,0.262,0.292,0.446,A
