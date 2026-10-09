@@ -420,6 +420,45 @@ The pattern is the same as everything before: **the remaining edge is informatio
 """)
 
 md("""
+### 7e. Trying to beat the lineup model: the final model
+
+`src/improve.py`, `src/improve2.py` and `src/pooled_lineups.py` test everything left that could plausibly help: longer form windows, ClubElo and pi-ratings, Poisson expected goals, non-linear Elo terms, league home advantage, regularisation, recency weighting, an ordinal model, gradient boosting, more detailed lineup features (who is missing, by line; goalkeeper change; captain out; cohesion; bench value; age), recalibration, training on five leagues, and ensembles.
+
+Because so many variants are tried, the protocol is stricter: the seven backtest seasons are split into a **development half** (2019/20–2022/23) used to choose, and a **confirmation half** (2023/24–2025/26) only looked at afterwards. A change that only looks good on the development half is luck.
+""")
+
+code("""
+r1 = pd.read_csv(ROOT / "reports/improve_results.csv")
+r2 = pd.read_csv(ROOT / "reports/improve2_results.csv")
+r3 = pd.read_csv(ROOT / "reports/pooled_lineups.csv")
+res = pd.concat([r1[r1.group == "A. football only"], r2, r3]).drop_duplicates(["variant", "split"])
+wide = res.pivot(index="variant", columns="split", values="rps_change_in_se")[["dev", "confirm"]].round(2)
+wide["rps_all"] = res[res.split == "all"].set_index("variant").rps.round(4)
+wide["accuracy_all"] = (100 * res[res.split == "all"].set_index("variant").accuracy).round(1)
+wide = wide.loc[res.variant.drop_duplicates()]   # keep the order they were run in
+wide.columns = ["dev (SE)", "confirm (SE)", "RPS, all", "accuracy %, all"]
+wide
+""")
+
+md("""
+**What held up.** Only the ensembles improve on the confirmation half (about −3.3 standard errors). The final model is the **equal-weight average of five models**: the lineup model, an ordinal logit on the same features, the lineup model with long-window form, the lineup model with Poisson expected goals, and a shallow gradient boosting on all features. Each one alone is within noise of the lineup model; averaging helps because their errors differ. Weights fitted on the development half came out close to equal, so nothing is fitted.
+
+Everything else failed the same test, including the richer lineup detail, recalibration and five-league training. The market-aware check (`improve.py`, group B) shows the model adds nothing to the bookmakers' odds.
+""")
+
+code("""
+fb = pd.read_csv(ROOT / "reports/final_backtest_by_season.csv")
+fig, ax = plt.subplots(figsize=(9, 4))
+x = np.arange(len(fb))
+for i, (c, lab, col) in enumerate([("lineup_model", "lineup model", "#2a78d6"), ("ensemble", "final ensemble", "#eb6834"), ("bookmakers", "bookmakers", "#1baf7a")]):
+    ax.bar(x + (i - 1) * 0.27, 100 * fb[c], 0.27, label=lab, color=col)
+ax.set_xticks(x, fb.season); ax.set_ylim(40, 65); ax.set_ylabel("accuracy, %"); ax.legend(frameon=False)
+ax.set_title("Final ensemble vs lineup model and bookmakers, by season")
+plt.show()
+fb.assign(**{c: (100 * fb[c]).round(1) for c in ["lineup_model", "ensemble", "bookmakers"]})
+""")
+
+md("""
 ## 8. Everything else that was tried
 
 `src/experiments.py` tested 48 combinations on the same 7-season backtest:
@@ -497,13 +536,13 @@ pd.read_csv(ROOT / "reports/next_matchday_predictions.csv")
 md("""
 ## 11. Conclusions
 
-1. **Honest accuracy is about 53%**, against 43% for always picking home and 54% for the bookmakers. The 82% in 2023 came from leakage.
+1. **Honest accuracy is about 53%**: 52.7% from results only, 53.4% for the final model (results + lineups, ensemble of five), against 43% for always picking home and 54% for the bookmakers. The 82% in 2023 came from leakage.
 2. **Each team's recent results are the core of the model**, through Elo and form.
 3. **Head-to-head history and weather were tested properly and don't help.** Elo already covers head-to-head, and weather affects goals, not winners.
-4. **More data and more complex models didn't help either.** The limit is the information, not the algorithm.
+4. **More data and more complex models didn't help either.** Longer form, other ratings, tuning, recency weighting, other model families, recalibration and five-league training all failed a development/confirmation split. Only averaging five model variants held up, and it is a small gain (RPS 0.2022 → 0.2013). The limit is the information, not the algorithm.
 5. **Of everything tested, only team news (lineups) clearly helped, with xG as a promising second.** Congestion, stakes, manager changes, player ratings and suspensions added nothing beyond what the model already knew.
 6. **Team news, in more detail:** Confirmed lineups (who is missing compared with usual) made the probabilities clearly better, though accuracy barely moved. Using them live needs the lineups collected about an hour before kickoff, for example with an Apify scraper. The bookmakers are still slightly ahead because they know the same news earlier, and more of it.
-7. **Report confidence, not just a pick.** At 65%+ confidence the model is right about 3 times in 4.
+7. **Report confidence, not just a pick.** At 65%+ confidence (22% of matches) the final model is right 73% of the time; at 70%+ (15% of matches), 75%.
 """)
 
 nb["cells"] = C

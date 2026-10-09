@@ -45,6 +45,7 @@ def main():
     e0 = carry_clubelo(allm[allm.League == "E0"].copy())
     allm = pd.concat([allm[allm.League != "E0"], e0], ignore_index=True)
     df = build_features_v2(allm, elo_cfg)
+    df.to_pickle(ROOT / "data" / "processed" / "features_v2.pkl")  # reused by experiments.py and improve.py
     feats = FEATS + league_dummies(df, POOL)
     played = df.FTHG.notna()
     usable = played & df.League.isin(POOL) & (df.Season >= "2001/02")

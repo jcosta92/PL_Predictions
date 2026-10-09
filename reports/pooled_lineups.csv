@@ -1,0 +1,13 @@
+group,variant,split,matches,accuracy,rps,acc_change_pts,rps_change,rps_se,rps_change_in_se
+D. pooled leagues,lineup model,dev,1520,0.53224,0.20447,0.0,0.0,0.0,0.0
+D. pooled leagues,lineup model,confirm,1140,0.52719,0.19924,0.0,0.0,0.0,0.0
+D. pooled leagues,lineup model,all,2660,0.53008,0.20223,0.0,0.0,0.0,0.0
+D. pooled leagues,"same features, v2 form, PL only",dev,1520,0.53026,0.20435,-0.19737,-0.00012,0.00038,-0.3292
+D. pooled leagues,"same features, v2 form, PL only",confirm,1140,0.53246,0.19906,0.52632,-0.00018,0.00031,-0.57404
+D. pooled leagues,"same features, v2 form, PL only",all,2660,0.5312,0.20208,0.11278,-0.00015,0.00025,-0.5821
+D. pooled leagues,"pooled: 5 leagues, league indicator",dev,1520,0.53487,0.20331,0.26316,-0.00117,0.00064,-1.81923
+D. pooled leagues,"pooled: 5 leagues, league indicator",confirm,1140,0.52895,0.19904,0.17544,-0.0002,0.0007,-0.28087
+D. pooled leagues,"pooled: 5 leagues, league indicator",all,2660,0.53233,0.20148,0.22556,-0.00075,0.00047,-1.58581
+D. pooled leagues,"pooled: 5 leagues, no indicator",dev,1520,0.53618,0.20324,0.39474,-0.00123,0.00065,-1.8914
+D. pooled leagues,"pooled: 5 leagues, no indicator",confirm,1140,0.52982,0.19912,0.26316,-0.00012,0.00072,-0.16132
+D. pooled leagues,"pooled: 5 leagues, no indicator",all,2660,0.53346,0.20148,0.33835,-0.00075,0.00048,-1.55685

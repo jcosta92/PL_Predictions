@@ -1,0 +1,15 @@
+{
+  "chosen_on_dev": "ordinal logit, lineup features",
+  "dev": {
+    "accuracy": 0.5335526315789474,
+    "rps": 0.2042282547806157,
+    "rps_change": -0.0002445331484005196,
+    "rps_change_in_se": -0.7681590340632519
+  },
+  "confirm": {
+    "accuracy": 0.5307017543859649,
+    "rps": 0.19881455633455578,
+    "rps_change": -0.00042501494448380056,
+    "rps_change_in_se": -1.4042510538587814
+  }
+}

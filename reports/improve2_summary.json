@@ -1,0 +1,9 @@
+{
+  "stack_weights": {
+    "lineup model": 2.9010552764276476e-09,
+    "ordinal logit, lineup features": 0.37611053822306717,
+    "+ long-window form (19 games, EWM, shots on target)": 0.32067447896453855,
+    "gradient boosting (shallow, regularised), all features": 0.1611321294307337,
+    "+ Poisson expected goals": 0.14208285048060523
+  }
+}

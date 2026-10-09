@@ -11,14 +11,17 @@ This is a rebuild of my 2023 bootcamp project [Mid_project_PL](https://github.co
 | | Accuracy | Notes |
 |---|---|---|
 | Always pick the home team | 43.4% | 2019/20–2025/26 backtest, 2,660 matches |
-| **This model** | **52.7%** | same backtest, each season predicted using only earlier seasons |
-| Bookmakers' favourite | 54.4% | same backtest |
+| This model, results only (v1) | 52.7% | same backtest, each season predicted using only earlier seasons |
+| **Final model: results + confirmed lineups, ensemble of five** | **53.4%** | same backtest; probability score (RPS) 0.2013 vs 0.2039 for v1 |
+| Bookmakers' favourite | 54.4% | same backtest; RPS 0.1981 |
 | **This model, 2026/27 so far** | **46% (23/50)** | unseen test season; only 36% of these matches were home wins |
 | Bookmakers, 2026/27 so far | 55% | odds only available for the first 20 matches |
 
 Accuracy per season varies by about 5–8 points, so 50 matches on their own say little. The seven-season backtest is the more reliable figure.
 
-The model gets within about 1.7 points of the bookmakers using only past results. Closing that gap needs information the betting market has and this data doesn't: team news, injuries, lineups and expected goals. Adding bookmaker odds as a feature did not improve on the odds alone.
+The results-only model gets within about 1.7 points of the bookmakers. Confirmed lineups and an ensemble of five model variants close about a quarter of the remaining gap in probability quality (RPS 0.2039 → 0.2013; the bookmakers are at 0.1981). Everything else that was tried, listed below, made no measurable difference. Adding bookmaker odds as a feature did not improve on the odds alone.
+
+The 2026/27 test figure is for the results-only model: the lineup data ends in May 2026, so the final model cannot be scored on the current season yet.
 
 ## What was wrong in 2023, and what changed
 
@@ -161,6 +164,41 @@ The table compares each signal with the lineup model on the same matches. A nega
 - **The suspension feature is approximate.** Card counts give the right ban in most cases, but 14% of the players flagged as suspended still made the squad (appeals and rescinded cards).
 - **Odds movement needs the full Football-Data season files** (`E0.csv` per season, with the `AvgH`/`AvgCH` columns). The site is not reachable from the environment this was built in. Save them as `data/raw/football_data_full/E0_1920.csv` … `E0_2526.csv` and rerun `python test_more_signals.py`; the test, and the bookmakers' opening and closing reference rows, run automatically. Movement is a market signal: it can only be used close to kickoff, and it measures how much late information the bookmakers had rather than adding football knowledge.
 
+## Trying to beat the lineup model
+
+`src/improve.py`, `src/improve2.py` and `src/pooled_lineups.py` try everything left that could plausibly improve on the lineup model. Because many variants are tried, the protocol is stricter than before: the seven backtest seasons are split into a **development half** (2019/20–2022/23, 1,520 matches), used to choose, and a **confirmation half** (2023/24–2025/26, 1,140 matches), looked at only afterwards. A change that only looks good on the development half is luck.
+
+Every variant is compared with the lineup model on the same matches. A negative RPS change is better; "SE" is the change in standard errors.
+
+| Variant | Dev SE | Confirm SE | RPS, all | Accuracy, all |
+|---|---|---|---|---|
+| Lineup model (base) | | | 0.2022 | 53.0% |
+| + long-window form (19 games, EWM, shots on target) | −0.2 | −1.9 | 0.2015 | 53.0% |
+| + ClubElo and pi-ratings | −0.3 | +0.4 | 0.2022 | 52.9% |
+| + Poisson expected goals | −0.3 | −0.6 | 0.2021 | 53.2% |
+| + non-linear Elo terms | +1.5 | −1.2 | 0.2023 | 52.7% |
+| + league home advantage, no-crowd flag | +1.4 | +2.0 | 0.2030 | 53.2% |
+| + all of the above | +0.8 | −0.3 | 0.2025 | 52.7% |
+| Regularisation C = 0.02 … 1.0 (8 variants) | −0.8 … +1.2 | −1.0 … +1.6 | 0.2019–0.2030 | |
+| Recency weighting, half-life 2/4/8 seasons (6 variants) | +1.0 … +3.0 | −1.1 … +0.0 | 0.2022–0.2038 | |
+| Ordinal (proportional-odds) logit | −0.8 | −1.4 | 0.2019 | 53.2% |
+| Gradient boosting, shallow and regularised | +2.3 | +1.7 | 0.2045 | 53.0% |
+| Detailed lineup features: XI value by line, star player out, GK change, captain out, cohesion, bench value, age (6 variants) | −0.9 … +1.2 | −1.2 … +3.4 | 0.2015–0.2034 | |
+| Recalibrated lineup model (intercepts and temperature) | +2.0 | +0.1 | 0.2036 | 52.6% |
+| Lineup model trained on five leagues (Premier League, La Liga, Serie A, Bundesliga, Ligue 1) | −1.8 | −0.3 | 0.2015 | 53.2% |
+| Stacked ensemble, weights fitted on the development half | −1.7 | **−3.4** | 0.2011 | 53.4% |
+| **Equal-weight ensemble of five models** | −1.7 | **−3.3** | **0.2013** | **53.4%** |
+
+The five models in the ensemble: the lineup model, the ordinal logit on the same features, the lineup model with long-window form, the lineup model with Poisson expected goals, and a shallow gradient boosting on all features. Each on its own is within noise of the lineup model; averaging them is what helps, because their errors differ. The weights fitted on the development half were close to equal, so the final model uses equal weights (nothing fitted).
+
+**Market-aware check.** With the bookmakers' odds as an input, the model does not beat the odds alone (+0.3 SE on all matches), and the final ensemble is still behind the bookmakers by 3.3 SE. The model has no information the market lacks.
+
+**Conclusions**
+
+- The final model is the equal-weight ensemble: 53.4% and RPS 0.2013 over 2,660 matches, against 52.7% and 0.2039 for results only, and 54.4% and 0.1981 for the bookmakers.
+- Nothing else held up on the confirmation half. More features, other model families, tuning, recalibration, richer lineup detail and five-league training all failed the same test. This is a data limit, not a modelling one.
+- At 65% or higher confidence (22% of matches) the ensemble is right 73% of the time; at 70% or higher (15% of matches), 75%.
+
 ## Run
 
 ```bash
@@ -171,8 +209,10 @@ python evaluate.py      # writes reports/metrics.json, backtest and test predict
 python leakage_demo.py
 python predict_next.py  # writes reports/next_matchday_predictions.csv
 python test_extra_signals.py
+python build_multileague.py && python evaluate_v2.py && python experiments.py   # v2 experiments
 python lineups.py && python test_lineups.py   # needs the Transfermarkt files
 python more_signals.py && python test_more_signals.py   # needs the Transfermarkt files
+python improve.py && python lineups_v2.py && python improve2.py && python pooled_lineups.py   # final model
 ```
 
 The notebook (`notebooks/`) needs `jupyter` and `matplotlib` as well.
