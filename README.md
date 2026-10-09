@@ -4,7 +4,7 @@ Predicts home win / draw / away win for Premier League matches, using only infor
 
 This is a rebuild of my 2023 bootcamp project [Mid_project_PL](https://github.com/jcosta92/Mid_project_PL). That project reported 82% accuracy. That figure was wrong: the model was effectively being shown the answer. This repo finds the bugs, fixes them, and reports the real number.
 
-**Start with [`notebooks/PL_Predictions_walkthrough.ipynb`](notebooks/PL_Predictions_walkthrough.ipynb)**, which walks through the whole process step by step.
+**Start with [`notebooks/PL_Predictions_walkthrough.ipynb`](notebooks/PL_Predictions_walkthrough.ipynb)**, which walks through the whole process step by step. `site/index.html` is a self-contained page with this matchday's predictions next to the bookmakers and the season's running record; regenerate it weekly with the commands under Run.
 
 ## Results
 
@@ -213,6 +213,7 @@ python build_multileague.py && python evaluate_v2.py && python experiments.py   
 python lineups.py && python test_lineups.py   # needs the Transfermarkt files
 python more_signals.py && python test_more_signals.py   # needs the Transfermarkt files
 python improve.py && python lineups_v2.py && python improve2.py && python pooled_lineups.py   # final model
+python build_page.py   # writes site/index.html: this matchday vs the bookmakers, season record
 ```
 
 The notebook (`notebooks/`) needs `jupyter` and `matplotlib` as well.

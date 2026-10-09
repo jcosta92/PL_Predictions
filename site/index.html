@@ -1,0 +1,434 @@
+<title>PL Predictions</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* layout: one column, scoreboard tables; the model is green, the market is amber */
+:root {
+  --bg: #f6f7f4; --surface: #ffffff; --fg: #1b2420; --muted: #66706b; --line: #d9ded9;
+  --model: #1f7a4d; --model-soft: #d6eee0; --market: #b4731a; --market-soft: #f6e6cc;
+  --draw: #8a93a0; --away: #3f5fa8; --away-soft: #dde5f6; --hit: #1f7a4d; --miss: #b23a3a;
+  --display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141a17; --surface: #1d2622; --fg: #e8ece9; --muted: #9aa49e; --line: #2f3a35;
+  --model: #4cc48a; --model-soft: #1f3d2f; --market: #e0a04a; --market-soft: #40301a;
+  --draw: #6f7a86; --away: #7f9ee0; --away-soft: #253352; --hit: #4cc48a; --miss: #e06a6a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #141a17; --surface: #1d2622; --fg: #e8ece9; --muted: #9aa49e; --line: #2f3a35;
+  --model: #4cc48a; --model-soft: #1f3d2f; --market: #e0a04a; --market-soft: #40301a;
+  --draw: #6f7a86; --away: #7f9ee0; --away-soft: #253352; --hit: #4cc48a; --miss: #e06a6a; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 960px; margin: 0 auto; padding-block: 28px 48px; padding-inline: 16px; }
+h1, h2 { font-family: var(--display); font-weight: 700; letter-spacing: .01em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(34px, 6vw, 52px); line-height: 1; text-transform: uppercase; }
+h2 { font-size: 26px; margin-top: 40px; padding-bottom: 6px; border-bottom: 3px solid var(--fg); }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 62ch; }
+.eyebrow { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: 14px; color: var(--muted); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 18px; }
+.tile { background: var(--surface); border: 1px solid var(--line); padding: 12px 14px; }
+.tile .n { font-family: var(--display); font-size: 40px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.tile .l { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.tile.model .n { color: var(--model); } .tile.market .n { color: var(--market); }
+.tablewrap { overflow-x: auto; margin-top: 16px; min-width: 0; max-width: 100%; }
+.two > * { min-width: 0; }
+code { overflow-wrap: anywhere; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: 13px; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+td.date { white-space: nowrap; color: var(--muted); font-size: 14px; }
+.team { font-weight: 600; } .v { color: var(--muted); padding: 0 3px; }
+.elo { display: block; color: var(--muted); font-size: 13px; }
+.probs { min-width: 180px; }
+.bar { display: flex; height: 22px; width: 100%; max-width: 260px; border: 1px solid var(--line); background: var(--surface); }
+.seg { display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; overflow: hidden; opacity: .55; }
+.seg-pick { opacity: 1; }
+.seg-H { background: var(--model); } .seg-D { background: var(--draw); } .seg-A { background: var(--away); }
+.pill { display: inline-block; padding: 2px 8px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.pill-H { background: var(--model-soft); color: var(--model); } .pill-D { background: var(--line); color: var(--fg); } .pill-A { background: var(--away-soft); color: var(--away); }
+.muted { color: var(--muted); } .hit { color: var(--hit); font-weight: 600; } .miss { color: var(--miss); font-weight: 600; }
+.note { background: var(--surface); border-left: 4px solid var(--market); padding: 10px 14px; margin-top: 16px; max-width: 70ch; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: 8px; }
+.legend i { display: inline-block; width: 12px; height: 12px; vertical-align: -1px; margin-right: 4px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; } @media (max-width: 640px) { .two { grid-template-columns: 1fr; } }
+p { max-width: 68ch; }
+a { color: var(--model); }
+footer { margin-top: 48px; color: var(--muted); font-size: 14px; }
+</style>
+<div class="wrap">
+  <div class="eyebrow">Premier League 2026/27 · results-only model · results up to 20 Sep 2026</div>
+  <h1>PL Predictions</h1>
+  <p class="sub">Each match, the model's win / draw / away probabilities next to the bookmakers' favourite, and a running count of who was right. Built from results alone, with no leakage: every number for a match uses only matches played before it.</p>
+
+  <h2>This matchday · 10–12 Oct 2026</h2>
+  <div class="legend"><span><i style="background:var(--model)"></i>home win</span><span><i style="background:var(--draw)"></i>draw</span><span><i style="background:var(--away)"></i>away win</span><span>bright segment = the model's pick</span></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Kick-off</th><th>Fixture</th><th>Model probabilities</th><th>Model pick</th><th>Bookmakers</th></tr></thead>
+    <tbody><tr>
+  <td class="date">Sat 10 Oct</td>
+  <td class="fix"><span class="team">Arsenal</span> <span class="v">v</span> <span class="team">Leeds</span>
+      <span class="elo">Elo 1749 · 1551</span></td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:69.2%" title="Home win 69%">69</span><span class="seg seg-D" style="width:19.9%" title="Draw 20%">20</span><span class="seg seg-A" style="width:10.9%" title="Away win 11%"></span></div></td>
+  <td class="pick"><span class="pill pill-H">Home win</span> <span class="muted">69%</span></td>
+  <td class="bk"><span class='muted'>no odds yet</span></td>
+</tr><tr>
+  <td class="date">Sat 10 Oct</td>
+  <td class="fix"><span class="team">Aston Villa</span> <span class="v">v</span> <span class="team">Brentford</span>
+      <span class="elo">Elo 1575 · 1590</span></td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:42.6%" title="Home win 43%">43</span><span class="seg seg-D" style="width:27.8%" title="Draw 28%">28</span><span class="seg seg-A" style="width:29.6%" title="Away win 30%">30</span></div></td>
+  <td class="pick"><span class="pill pill-H">Home win</span> <span class="muted">43%</span></td>
+  <td class="bk"><span class='muted'>no odds yet</span></td>
+</tr><tr>
+  <td class="date">Sat 10 Oct</td>
+  <td class="fix"><span class="team">Chelsea</span> <span class="v">v</span> <span class="team">Bournemouth</span>
+      <span class="elo">Elo 1556 · 1586</span></td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:38.5%" title="Home win 38%">38</span><span class="seg seg-D" style="width:27.7%" title="Draw 28%">28</span><span class="seg seg-A" style="width:33.8%" title="Away win 34%">34</span></div></td>
+  <td class="pick"><span class="pill pill-H">Home win</span> <span class="muted">38%</span></td>
+  <td class="bk"><span class='muted'>no odds yet</span></td>
+</tr><tr>
+  <td class="date">Sat 10 Oct</td>
+  <td class="fix"><span class="team">Ipswich</span> <span class="v">v</span> <span class="team">Fulham</span>
+      <span class="elo">Elo 1441 · 1518</span></td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:29.8%" title="Home win 30%">30</span><span class="seg seg-D" style="width:29.8%" title="Draw 30%">30</span><span class="seg seg-A seg-pick" style="width:40.5%" title="Away win 40%">40</span></div></td>
+  <td class="pick"><span class="pill pill-A">Away win</span> <span class="muted">40%</span></td>
+  <td class="bk"><span class='muted'>no odds yet</span></td>
+</tr><tr>
+  <td class="date">Sat 10 Oct</td>
+  <td class="fix"><span class="team">Man United</span> <span class="v">v</span> <span class="team">Tottenham</span>
+      <span class="elo">Elo 1618 · 1453</span></td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:61.2%" title="Home win 61%">61</span><span class="seg seg-D" style="width:24.0%" title="Draw 24%">24</span><span class="seg seg-A" style="width:14.8%" title="Away win 15%">15</span></div></td>
+  <td class="pick"><span class="pill pill-H">Home win</span> <span class="muted">61%</span></td>
+  <td class="bk"><span class='muted'>no odds yet</span></td>
+</tr><tr>
+  <td class="date">Sat 10 Oct</td>
+  <td class="fix"><span class="team">Sunderland</span> <span class="v">v</span> <span class="team">Brighton</span>
+      <span class="elo">Elo 1505 · 1615</span></td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:27.0%" title="Home win 27%">27</span><span class="seg seg-D" style="width:29.2%" title="Draw 29%">29</span><span class="seg seg-A seg-pick" style="width:43.8%" title="Away win 44%">44</span></div></td>
+  <td class="pick"><span class="pill pill-A">Away win</span> <span class="muted">44%</span></td>
+  <td class="bk"><span class='muted'>no odds yet</span></td>
+</tr><tr>
+  <td class="date">Sun 11 Oct</td>
+  <td class="fix"><span class="team">Crystal Palace</span> <span class="v">v</span> <span class="team">Nott&#x27;m Forest</span>
+      <span class="elo">Elo 1502 · 1541</span></td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:38.3%" title="Home win 38%">38</span><span class="seg seg-D" style="width:28.9%" title="Draw 29%">29</span><span class="seg seg-A" style="width:32.8%" title="Away win 33%">33</span></div></td>
+  <td class="pick"><span class="pill pill-H">Home win</span> <span class="muted">38%</span></td>
+  <td class="bk"><span class='muted'>no odds yet</span></td>
+</tr><tr>
+  <td class="date">Sun 11 Oct</td>
+  <td class="fix"><span class="team">Hull</span> <span class="v">v</span> <span class="team">Everton</span>
+      <span class="elo">Elo 1471 · 1552</span></td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:28.3%" title="Home win 28%">28</span><span class="seg seg-D" style="width:29.0%" title="Draw 29%">29</span><span class="seg seg-A seg-pick" style="width:42.7%" title="Away win 43%">43</span></div></td>
+  <td class="pick"><span class="pill pill-A">Away win</span> <span class="muted">43%</span></td>
+  <td class="bk"><span class='muted'>no odds yet</span></td>
+</tr><tr>
+  <td class="date">Sun 11 Oct</td>
+  <td class="fix"><span class="team">Liverpool</span> <span class="v">v</span> <span class="team">Man City</span>
+      <span class="elo">Elo 1644 · 1759</span></td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:32.4%" title="Home win 32%">32</span><span class="seg seg-D" style="width:25.2%" title="Draw 25%">25</span><span class="seg seg-A seg-pick" style="width:42.5%" title="Away win 42%">42</span></div></td>
+  <td class="pick"><span class="pill pill-A">Away win</span> <span class="muted">42%</span></td>
+  <td class="bk"><span class='muted'>no odds yet</span></td>
+</tr><tr>
+  <td class="date">Mon 12 Oct</td>
+  <td class="fix"><span class="team">Coventry</span> <span class="v">v</span> <span class="team">Newcastle</span>
+      <span class="elo">Elo 1424 · 1560</span></td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:25.8%" title="Home win 26%">26</span><span class="seg seg-D" style="width:29.1%" title="Draw 29%">29</span><span class="seg seg-A seg-pick" style="width:45.0%" title="Away win 45%">45</span></div></td>
+  <td class="pick"><span class="pill pill-A">Away win</span> <span class="muted">45%</span></td>
+  <td class="bk"><span class='muted'>no odds yet</span></td>
+</tr></tbody>
+  </table></div>
+  <div class="note">Bookmakers' odds for upcoming fixtures are added when <code>data/raw/football_data_full/fixtures.csv</code> from Football-Data.co.uk is present. The odds for played matches below come from the dataset.</div>
+
+  <h2>Season so far</h2>
+  <div class="tiles">
+    <div class="tile model"><div class="n">46%</div><div class="l">model, 50 matches</div></div>
+    <div class="tile market"><div class="n">55%</div><div class="l">bookmakers, 20 matches with odds</div></div>
+    <div class="tile"><div class="n">55%</div><div class="l">model on those same 20</div></div>
+    <div class="tile"><div class="n">36%</div><div class="l">home wins this season (long-run 46%)</div></div>
+  </div>
+  <p class="sub">50 matches is a small sample: accuracy swings by 5–8 points from season to season, and this season has had unusually few home wins so far. The seven-season backtest below is the reliable number.</p>
+
+  <div class="eyebrow" style="margin-top:28px">Where the model and the bookmakers disagreed</div>
+  <div class='tablewrap'><table><thead><tr><th>Date</th><th>Fixture</th><th>Score</th><th>Model</th><th>Bookmakers</th></tr></thead><tbody><tr><td class="date">24 Aug</td>
+  <td class="fix"><span class="team">Fulham</span> <span class="v">v</span> <span class="team">Chelsea</span></td>
+  <td>2–3</td>
+  <td><span class="pill pill-H">Home win</span> ✗</td>
+  <td><span class="pill pill-A">Away win</span> ✓</td></tr><tr><td class="date">29 Aug</td>
+  <td class="fix"><span class="team">Tottenham</span> <span class="v">v</span> <span class="team">Newcastle</span></td>
+  <td>0–2</td>
+  <td><span class="pill pill-A">Away win</span> ✓</td>
+  <td><span class="pill pill-H">Home win</span> ✗</td></tr></tbody></table></div>
+
+  <div class="eyebrow" style="margin-top:28px">All matches</div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Date</th><th>Fixture</th><th>Score</th><th>Model probabilities</th><th>Model pick</th><th>Bookmakers</th></tr></thead>
+    <tbody><tr><td class="date">20 Sep</td>
+  <td class="fix"><span class="team">Man City</span> <span class="v">v</span> <span class="team">Sunderland</span></td>
+  <td>5–3</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:76.3%" title="Home win 76%">76</span><span class="seg seg-D" style="width:16.2%" title="Draw 16%">16</span><span class="seg seg-A" style="width:7.4%" title="Away win 7%"></span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">20 Sep</td>
+  <td class="fix"><span class="team">Leeds</span> <span class="v">v</span> <span class="team">Crystal Palace</span></td>
+  <td>0–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:49.9%" title="Home win 50%">50</span><span class="seg seg-D" style="width:26.3%" title="Draw 26%">26</span><span class="seg seg-A" style="width:23.8%" title="Away win 24%">24</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">20 Sep</td>
+  <td class="fix"><span class="team">Fulham</span> <span class="v">v</span> <span class="team">Man United</span></td>
+  <td>1–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:30.5%" title="Home win 30%">30</span><span class="seg seg-D" style="width:27.9%" title="Draw 28%">28</span><span class="seg seg-A seg-pick" style="width:41.6%" title="Away win 42%">42</span></div></td>
+  <td class="miss">Away win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">20 Sep</td>
+  <td class="fix"><span class="team">Bournemouth</span> <span class="v">v</span> <span class="team">Liverpool</span></td>
+  <td>0–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:38.1%" title="Home win 38%">38</span><span class="seg seg-D" style="width:27.2%" title="Draw 27%">27</span><span class="seg seg-A" style="width:34.6%" title="Away win 35%">35</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">19 Sep</td>
+  <td class="fix"><span class="team">Tottenham</span> <span class="v">v</span> <span class="team">Aston Villa</span></td>
+  <td>2–3</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:31.0%" title="Home win 31%">31</span><span class="seg seg-D" style="width:26.2%" title="Draw 26%">26</span><span class="seg seg-A seg-pick" style="width:42.8%" title="Away win 43%">43</span></div></td>
+  <td class="hit">Away win ✓</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">19 Sep</td>
+  <td class="fix"><span class="team">Nott&#x27;m Forest</span> <span class="v">v</span> <span class="team">Coventry</span></td>
+  <td>0–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:67.6%" title="Home win 68%">68</span><span class="seg seg-D" style="width:20.0%" title="Draw 20%">20</span><span class="seg seg-A" style="width:12.4%" title="Away win 12%">12</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">19 Sep</td>
+  <td class="fix"><span class="team">Newcastle</span> <span class="v">v</span> <span class="team">Hull</span></td>
+  <td>2–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:58.9%" title="Home win 59%">59</span><span class="seg seg-D" style="width:24.1%" title="Draw 24%">24</span><span class="seg seg-A" style="width:17.1%" title="Away win 17%">17</span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">19 Sep</td>
+  <td class="fix"><span class="team">Everton</span> <span class="v">v</span> <span class="team">Ipswich</span></td>
+  <td>1–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:66.5%" title="Home win 66%">66</span><span class="seg seg-D" style="width:20.1%" title="Draw 20%">20</span><span class="seg seg-A" style="width:13.3%" title="Away win 13%">13</span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">19 Sep</td>
+  <td class="fix"><span class="team">Brighton</span> <span class="v">v</span> <span class="team">Arsenal</span></td>
+  <td>3–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:28.2%" title="Home win 28%">28</span><span class="seg seg-D" style="width:23.3%" title="Draw 23%">23</span><span class="seg seg-A seg-pick" style="width:48.5%" title="Away win 48%">48</span></div></td>
+  <td class="miss">Away win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">18 Sep</td>
+  <td class="fix"><span class="team">Brentford</span> <span class="v">v</span> <span class="team">Chelsea</span></td>
+  <td>3–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:44.8%" title="Home win 45%">45</span><span class="seg seg-D" style="width:26.8%" title="Draw 27%">27</span><span class="seg seg-A" style="width:28.4%" title="Away win 28%">28</span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">14 Sep</td>
+  <td class="fix"><span class="team">Leeds</span> <span class="v">v</span> <span class="team">Newcastle</span></td>
+  <td>4–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:38.0%" title="Home win 38%">38</span><span class="seg seg-D" style="width:28.2%" title="Draw 28%">28</span><span class="seg seg-A" style="width:33.8%" title="Away win 34%">34</span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">13 Sep</td>
+  <td class="fix"><span class="team">Man United</span> <span class="v">v</span> <span class="team">Man City</span></td>
+  <td>0–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:29.6%" title="Home win 30%">30</span><span class="seg seg-D" style="width:24.7%" title="Draw 25%">25</span><span class="seg seg-A seg-pick" style="width:45.7%" title="Away win 46%">46</span></div></td>
+  <td class="hit">Away win ✓</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">13 Sep</td>
+  <td class="fix"><span class="team">Coventry</span> <span class="v">v</span> <span class="team">Brighton</span></td>
+  <td>0–5</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:25.8%" title="Home win 26%">26</span><span class="seg seg-D" style="width:28.4%" title="Draw 28%">28</span><span class="seg seg-A seg-pick" style="width:45.8%" title="Away win 46%">46</span></div></td>
+  <td class="hit">Away win ✓</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">12 Sep</td>
+  <td class="fix"><span class="team">Tottenham</span> <span class="v">v</span> <span class="team">Everton</span></td>
+  <td>0–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:26.8%" title="Home win 27%">27</span><span class="seg seg-D" style="width:27.9%" title="Draw 28%">28</span><span class="seg seg-A seg-pick" style="width:45.3%" title="Away win 45%">45</span></div></td>
+  <td class="miss">Away win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">12 Sep</td>
+  <td class="fix"><span class="team">Sunderland</span> <span class="v">v</span> <span class="team">Arsenal</span></td>
+  <td>0–2</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:16.8%" title="Home win 17%">17</span><span class="seg seg-D" style="width:22.8%" title="Draw 23%">23</span><span class="seg seg-A seg-pick" style="width:60.5%" title="Away win 60%">60</span></div></td>
+  <td class="hit">Away win ✓</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">12 Sep</td>
+  <td class="fix"><span class="team">Liverpool</span> <span class="v">v</span> <span class="team">Fulham</span></td>
+  <td>0–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:62.3%" title="Home win 62%">62</span><span class="seg seg-D" style="width:22.1%" title="Draw 22%">22</span><span class="seg seg-A" style="width:15.6%" title="Away win 16%">16</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">12 Sep</td>
+  <td class="fix"><span class="team">Crystal Palace</span> <span class="v">v</span> <span class="team">Ipswich</span></td>
+  <td>2–3</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:59.6%" title="Home win 60%">60</span><span class="seg seg-D" style="width:23.7%" title="Draw 24%">24</span><span class="seg seg-A" style="width:16.8%" title="Away win 17%">17</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">12 Sep</td>
+  <td class="fix"><span class="team">Chelsea</span> <span class="v">v</span> <span class="team">Hull</span></td>
+  <td>2–2</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:61.9%" title="Home win 62%">62</span><span class="seg seg-D" style="width:23.0%" title="Draw 23%">23</span><span class="seg seg-A" style="width:15.0%" title="Away win 15%">15</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">12 Sep</td>
+  <td class="fix"><span class="team">Bournemouth</span> <span class="v">v</span> <span class="team">Brentford</span></td>
+  <td>2–2</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:50.1%" title="Home win 50%">50</span><span class="seg seg-D" style="width:25.7%" title="Draw 26%">26</span><span class="seg seg-A" style="width:24.2%" title="Away win 24%">24</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">12 Sep</td>
+  <td class="fix"><span class="team">Aston Villa</span> <span class="v">v</span> <span class="team">Nott&#x27;m Forest</span></td>
+  <td>1–2</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:47.7%" title="Home win 48%">48</span><span class="seg seg-D" style="width:27.8%" title="Draw 28%">28</span><span class="seg seg-A" style="width:24.5%" title="Away win 24%">24</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">06 Sep</td>
+  <td class="fix"><span class="team">Everton</span> <span class="v">v</span> <span class="team">Man United</span></td>
+  <td>2–2</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:34.4%" title="Home win 34%">34</span><span class="seg seg-D" style="width:26.3%" title="Draw 26%">26</span><span class="seg seg-A seg-pick" style="width:39.3%" title="Away win 39%">39</span></div></td>
+  <td class="miss">Away win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">06 Sep</td>
+  <td class="fix"><span class="team">Arsenal</span> <span class="v">v</span> <span class="team">Chelsea</span></td>
+  <td>2–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:65.2%" title="Home win 65%">65</span><span class="seg seg-D" style="width:21.1%" title="Draw 21%">21</span><span class="seg seg-A" style="width:13.7%" title="Away win 14%">14</span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">05 Sep</td>
+  <td class="fix"><span class="team">Brighton</span> <span class="v">v</span> <span class="team">Leeds</span></td>
+  <td>1–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:58.3%" title="Home win 58%">58</span><span class="seg seg-D" style="width:22.9%" title="Draw 23%">23</span><span class="seg seg-A" style="width:18.8%" title="Away win 19%">19</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">05 Sep</td>
+  <td class="fix"><span class="team">Brentford</span> <span class="v">v</span> <span class="team">Sunderland</span></td>
+  <td>1–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:59.9%" title="Home win 60%">60</span><span class="seg seg-D" style="width:22.7%" title="Draw 23%">23</span><span class="seg seg-A" style="width:17.4%" title="Away win 17%">17</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">05 Sep</td>
+  <td class="fix"><span class="team">Fulham</span> <span class="v">v</span> <span class="team">Crystal Palace</span></td>
+  <td>2–3</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:48.5%" title="Home win 48%">48</span><span class="seg seg-D" style="width:26.5%" title="Draw 26%">26</span><span class="seg seg-A" style="width:25.0%" title="Away win 25%">25</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">05 Sep</td>
+  <td class="fix"><span class="team">Hull</span> <span class="v">v</span> <span class="team">Aston Villa</span></td>
+  <td>0–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:31.7%" title="Home win 32%">32</span><span class="seg seg-D" style="width:27.0%" title="Draw 27%">27</span><span class="seg seg-A seg-pick" style="width:41.3%" title="Away win 41%">41</span></div></td>
+  <td class="miss">Away win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">05 Sep</td>
+  <td class="fix"><span class="team">Man City</span> <span class="v">v</span> <span class="team">Coventry</span></td>
+  <td>1–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:81.9%" title="Home win 82%">82</span><span class="seg seg-D" style="width:13.9%" title="Draw 14%">14</span><span class="seg seg-A" style="width:4.3%" title="Away win 4%"></span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">05 Sep</td>
+  <td class="fix"><span class="team">Nott&#x27;m Forest</span> <span class="v">v</span> <span class="team">Tottenham</span></td>
+  <td>0–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:55.7%" title="Home win 56%">56</span><span class="seg seg-D" style="width:25.0%" title="Draw 25%">25</span><span class="seg seg-A" style="width:19.3%" title="Away win 19%">19</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">05 Sep</td>
+  <td class="fix"><span class="team">Newcastle</span> <span class="v">v</span> <span class="team">Bournemouth</span></td>
+  <td>2–2</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:45.1%" title="Home win 45%">45</span><span class="seg seg-D" style="width:25.9%" title="Draw 26%">26</span><span class="seg seg-A" style="width:29.0%" title="Away win 29%">29</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">04 Sep</td>
+  <td class="fix"><span class="team">Ipswich</span> <span class="v">v</span> <span class="team">Liverpool</span></td>
+  <td>0–2</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:19.2%" title="Home win 19%">19</span><span class="seg seg-D" style="width:25.4%" title="Draw 25%">25</span><span class="seg seg-A seg-pick" style="width:55.3%" title="Away win 55%">55</span></div></td>
+  <td class="hit">Away win ✓</td>
+  <td><span class="muted">—</span></td></tr><tr><td class="date">31 Aug</td>
+  <td class="fix"><span class="team">Aston Villa</span> <span class="v">v</span> <span class="team">Arsenal</span></td>
+  <td>0–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:24.2%" title="Home win 24%">24</span><span class="seg seg-D" style="width:25.2%" title="Draw 25%">25</span><span class="seg seg-A seg-pick" style="width:50.6%" title="Away win 51%">51</span></div></td>
+  <td class="hit">Away win ✓</td>
+  <td>Away win ✓</td></tr><tr><td class="date">30 Aug</td>
+  <td class="fix"><span class="team">Chelsea</span> <span class="v">v</span> <span class="team">Brighton</span></td>
+  <td>4–3</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:43.1%" title="Home win 43%">43</span><span class="seg seg-D" style="width:27.2%" title="Draw 27%">27</span><span class="seg seg-A" style="width:29.7%" title="Away win 30%">30</span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td>Home win ✓</td></tr><tr><td class="date">30 Aug</td>
+  <td class="fix"><span class="team">Sunderland</span> <span class="v">v</span> <span class="team">Fulham</span></td>
+  <td>1–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:41.3%" title="Home win 41%">41</span><span class="seg seg-D" style="width:27.8%" title="Draw 28%">28</span><span class="seg seg-A" style="width:30.8%" title="Away win 31%">31</span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td>Home win ✓</td></tr><tr><td class="date">30 Aug</td>
+  <td class="fix"><span class="team">Man United</span> <span class="v">v</span> <span class="team">Ipswich</span></td>
+  <td>5–2</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:68.6%" title="Home win 69%">69</span><span class="seg seg-D" style="width:20.3%" title="Draw 20%">20</span><span class="seg seg-A" style="width:11.1%" title="Away win 11%"></span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td>Home win ✓</td></tr><tr><td class="date">30 Aug</td>
+  <td class="fix"><span class="team">Leeds</span> <span class="v">v</span> <span class="team">Brentford</span></td>
+  <td>1–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:37.1%" title="Home win 37%">37</span><span class="seg seg-D" style="width:28.1%" title="Draw 28%">28</span><span class="seg seg-A" style="width:34.8%" title="Away win 35%">35</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td>Home win ✗</td></tr><tr><td class="date">29 Aug</td>
+  <td class="fix"><span class="team">Tottenham</span> <span class="v">v</span> <span class="team">Newcastle</span></td>
+  <td>0–2</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:31.5%" title="Home win 32%">32</span><span class="seg seg-D" style="width:27.1%" title="Draw 27%">27</span><span class="seg seg-A seg-pick" style="width:41.4%" title="Away win 41%">41</span></div></td>
+  <td class="hit">Away win ✓</td>
+  <td>Home win ✗</td></tr><tr><td class="date">29 Aug</td>
+  <td class="fix"><span class="team">Liverpool</span> <span class="v">v</span> <span class="team">Nott&#x27;m Forest</span></td>
+  <td>2–2</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:58.8%" title="Home win 59%">59</span><span class="seg seg-D" style="width:23.6%" title="Draw 24%">24</span><span class="seg seg-A" style="width:17.6%" title="Away win 18%">18</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td>Home win ✗</td></tr><tr><td class="date">29 Aug</td>
+  <td class="fix"><span class="team">Bournemouth</span> <span class="v">v</span> <span class="team">Everton</span></td>
+  <td>1–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:47.4%" title="Home win 47%">47</span><span class="seg seg-D" style="width:27.8%" title="Draw 28%">28</span><span class="seg seg-A" style="width:24.8%" title="Away win 25%">25</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td>Home win ✗</td></tr><tr><td class="date">29 Aug</td>
+  <td class="fix"><span class="team">Coventry</span> <span class="v">v</span> <span class="team">Hull</span></td>
+  <td>0–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:42.5%" title="Home win 42%">42</span><span class="seg seg-D" style="width:28.1%" title="Draw 28%">28</span><span class="seg seg-A" style="width:29.4%" title="Away win 29%">29</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td>Home win ✗</td></tr><tr><td class="date">28 Aug</td>
+  <td class="fix"><span class="team">Crystal Palace</span> <span class="v">v</span> <span class="team">Man City</span></td>
+  <td>1–4</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:18.1%" title="Home win 18%">18</span><span class="seg seg-D" style="width:23.8%" title="Draw 24%">24</span><span class="seg seg-A seg-pick" style="width:58.1%" title="Away win 58%">58</span></div></td>
+  <td class="hit">Away win ✓</td>
+  <td>Away win ✓</td></tr><tr><td class="date">24 Aug</td>
+  <td class="fix"><span class="team">Fulham</span> <span class="v">v</span> <span class="team">Chelsea</span></td>
+  <td>2–3</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:37.6%" title="Home win 38%">38</span><span class="seg seg-D" style="width:28.7%" title="Draw 29%">29</span><span class="seg seg-A" style="width:33.7%" title="Away win 34%">34</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td>Away win ✓</td></tr><tr><td class="date">23 Aug</td>
+  <td class="fix"><span class="team">Newcastle</span> <span class="v">v</span> <span class="team">Liverpool</span></td>
+  <td>2–2</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:30.6%" title="Home win 31%">31</span><span class="seg seg-D" style="width:27.9%" title="Draw 28%">28</span><span class="seg seg-A seg-pick" style="width:41.4%" title="Away win 41%">41</span></div></td>
+  <td class="miss">Away win ✗</td>
+  <td>Away win ✗</td></tr><tr><td class="date">23 Aug</td>
+  <td class="fix"><span class="team">Man City</span> <span class="v">v</span> <span class="team">Bournemouth</span></td>
+  <td>2–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:66.1%" title="Home win 66%">66</span><span class="seg seg-D" style="width:20.1%" title="Draw 20%">20</span><span class="seg seg-A" style="width:13.8%" title="Away win 14%">14</span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td>Home win ✓</td></tr><tr><td class="date">23 Aug</td>
+  <td class="fix"><span class="team">Brighton</span> <span class="v">v</span> <span class="team">Aston Villa</span></td>
+  <td>4–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:41.9%" title="Home win 42%">42</span><span class="seg seg-D" style="width:26.4%" title="Draw 26%">26</span><span class="seg seg-A" style="width:31.7%" title="Away win 32%">32</span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td>Home win ✓</td></tr><tr><td class="date">22 Aug</td>
+  <td class="fix"><span class="team">Hull</span> <span class="v">v</span> <span class="team">Man United</span></td>
+  <td>2–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:17.3%" title="Home win 17%">17</span><span class="seg seg-D" style="width:25.1%" title="Draw 25%">25</span><span class="seg seg-A seg-pick" style="width:57.5%" title="Away win 57%">57</span></div></td>
+  <td class="miss">Away win ✗</td>
+  <td>Away win ✗</td></tr><tr><td class="date">22 Aug</td>
+  <td class="fix"><span class="team">Everton</span> <span class="v">v</span> <span class="team">Crystal Palace</span></td>
+  <td>2–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:47.0%" title="Home win 47%">47</span><span class="seg seg-D" style="width:25.9%" title="Draw 26%">26</span><span class="seg seg-A" style="width:27.1%" title="Away win 27%">27</span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td>Home win ✓</td></tr><tr><td class="date">22 Aug</td>
+  <td class="fix"><span class="team">Brentford</span> <span class="v">v</span> <span class="team">Tottenham</span></td>
+  <td>3–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:53.6%" title="Home win 54%">54</span><span class="seg seg-D" style="width:26.4%" title="Draw 26%">26</span><span class="seg seg-A" style="width:19.9%" title="Away win 20%">20</span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td>Home win ✓</td></tr><tr><td class="date">22 Aug</td>
+  <td class="fix"><span class="team">Ipswich</span> <span class="v">v</span> <span class="team">Sunderland</span></td>
+  <td>2–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H" style="width:35.6%" title="Home win 36%">36</span><span class="seg seg-D" style="width:28.3%" title="Draw 28%">28</span><span class="seg seg-A seg-pick" style="width:36.1%" title="Away win 36%">36</span></div></td>
+  <td class="miss">Away win ✗</td>
+  <td>Away win ✗</td></tr><tr><td class="date">22 Aug</td>
+  <td class="fix"><span class="team">Nott&#x27;m Forest</span> <span class="v">v</span> <span class="team">Leeds</span></td>
+  <td>0–1</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:55.5%" title="Home win 56%">56</span><span class="seg seg-D" style="width:23.9%" title="Draw 24%">24</span><span class="seg seg-A" style="width:20.6%" title="Away win 21%">21</span></div></td>
+  <td class="miss">Home win ✗</td>
+  <td>Home win ✗</td></tr><tr><td class="date">21 Aug</td>
+  <td class="fix"><span class="team">Arsenal</span> <span class="v">v</span> <span class="team">Coventry</span></td>
+  <td>3–0</td>
+  <td class="probs"><div class="bar"><span class="seg seg-H seg-pick" style="width:81.4%" title="Home win 81%">81</span><span class="seg seg-D" style="width:14.0%" title="Draw 14%">14</span><span class="seg seg-A" style="width:4.5%" title="Away win 4%"></span></div></td>
+  <td class="hit">Home win ✓</td>
+  <td>Home win ✓</td></tr></tbody>
+  </table></div>
+
+  <h2>Backtest, 2019/20 to 2025/26</h2>
+  <div class="two">
+    <div>
+      <div class="tiles" style="margin-top:0">
+        <div class="tile model"><div class="n">53%</div><div class="l">final model, 2,660 matches</div></div>
+        <div class="tile market"><div class="n">54%</div><div class="l">bookmakers' favourite</div></div>
+        <div class="tile"><div class="n">43%</div><div class="l">always pick the home side</div></div>
+      </div>
+      <p class="sub">Each season predicted with a model trained only on earlier seasons. The final model uses confirmed lineups, which are not available live, so this page runs the results-only version (52.7% on the same backtest). At 65% or higher confidence, about one match in five, the model is right 73% of the time.</p>
+    </div>
+    <div class="tablewrap" style="margin-top:0"><table>
+      <thead><tr><th>Season</th><th>Model</th><th>Bookmakers</th></tr></thead><tbody><tr><td>2019/20</td><td>52%</td><td>53%</td></tr><tr><td>2020/21</td><td>49%</td><td>52%</td></tr><tr><td>2021/22</td><td>57%</td><td>58%</td></tr><tr><td>2022/23</td><td>54%</td><td>56%</td></tr><tr><td>2023/24</td><td>61%</td><td>59%</td></tr><tr><td>2024/25</td><td>53%</td><td>54%</td></tr><tr><td>2025/26</td><td>48%</td><td>49%</td></tr></tbody>
+    </table></div>
+  </div>
+
+  <h2>How it works</h2>
+  <p>Elo ratings updated after every match (bigger wins move the rating more, promoted sides start below the league mean), recent form over the last 5 and 10 matches, rest days, and a multinomial logistic regression on top. Everything was tested against the bookmakers with paired statistics, including head-to-head history, weather, fixture congestion, manager changes, expected goals, player ratings, suspensions and confirmed lineups. Only lineups moved the number. Code, data and the full write-up: <a href="https://github.com/jcosta92/PL_Predictions">github.com/jcosta92/PL_Predictions</a>.</p>
+  <footer>Match analysis for learning purposes. Not betting advice. Data: Football-Data.co.uk via Club-Football-Match-Data (MIT), openfootball (CC0).</footer>
+</div>
