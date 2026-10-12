@@ -199,6 +199,10 @@ The five models in the ensemble: the lineup model, the ordinal logit on the same
 - Nothing else held up on the confirmation half. More features, other model families, tuning, recalibration, richer lineup detail and five-league training all failed the same test. This is a data limit, not a modelling one.
 - At 65% or higher confidence (22% of matches) the ensemble is right 73% of the time; at 70% or higher (15% of matches), 75%.
 
+## Web app
+
+`streamlit run app.py` opens the model as a web app: this matchday's predictions, any fixture you pick (predicted with the current ratings and form), the season record against the bookmakers, and the backtest. To host it, sign in at share.streamlit.io with GitHub, *Create app*, repo `jcosta92/PL_Predictions`, branch `main`, main file `app.py`. Every push to `main` redeploys.
+
 ## Run
 
 ```bash

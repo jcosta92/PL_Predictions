@@ -5,3 +5,4 @@ scipy
 matplotlib
 jupyter
 requests
+streamlit>=1.40
